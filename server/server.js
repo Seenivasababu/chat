@@ -15,8 +15,8 @@ io.on('connection', (socket) => {
     if (userName) {
       connectedClient[userName] = socket.id;
     }
-    console.log(connectedClient);
     io.emit('usersList', Object.keys(connectedClient));
+    socket.emit('publicHistory', publicMessages);
   });
 
   socket.on('publicMessage', (message) => {
@@ -25,9 +25,18 @@ io.on('connection', (socket) => {
         (user) => connectedClient[user] === socket.id
       );
 
-      const data = { message, userName };
-      publicMessages.push(data);
-      console.log(data);
+      const data = {
+        message,
+        userName,
+        time: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      };
+      if (userName) {
+        publicMessages.push(data);
+      }
+
       io.emit('publicMessage', data);
     }
   });
