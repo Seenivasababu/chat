@@ -1,19 +1,26 @@
-const io = require("socket.io")(4000, {
+const io = require('socket.io')(4000, {
   cors: {
-    origin: ["http://localhost:3000"],
+    origin: ['http://localhost:3000'],
   },
 });
 
-
-const connectedClient = {}
+const connectedClient = {};
 
 io.on('connection', (socket) => {
-  socket.on('authenticate',(userName)=>{
-    if(userName){
-      connectedClient[userName] = socket.id
+  socket.on('authenticate', (userName) => {
+    if (userName) {
+      connectedClient[userName] = socket.id;
     }
     console.log(connectedClient);
-    io.emit('usersList',Object.keys(connectedClient))
-  })
-});
+    io.emit('usersList', Object.keys(connectedClient));
+  });
 
+  socket.on('disconnect', () => {
+    const disconnectedUserName = Object.keys(connectedClient).find(
+      (user) => connectedClient[user] === socket.id
+    );
+
+    delete connectedClient[disconnectedUserName];
+    io.emit('usersList', Object.keys(connectedClient));
+  });
+});

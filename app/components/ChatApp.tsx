@@ -14,6 +14,8 @@ const ChatApp = () => {
     socket.on('usersList', (usersList) => {
       setUsersList(usersList);
     });
+
+   
   }, []);
 
   const handleLogin = (userName: string) => {
