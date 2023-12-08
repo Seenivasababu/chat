@@ -9,6 +9,7 @@ const io = require('socket.io')(4000, {
 const connectedClient = {};
 
 const publicMessages = [];
+const privateMessages = [];
 
 io.on('connection', (socket) => {
   socket.on('authenticate', (userName) => {
@@ -40,6 +41,29 @@ io.on('connection', (socket) => {
       io.emit('publicMessage', data);
     }
   });
+
+  socket.on('privateMessage',({to,message})=>{
+    const from = Object.keys(connectedClient).find(user=>connectedClient[user]===socket.id)
+
+    const privateMessage = {
+      data : message,
+      from,
+      to,
+      time: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    }
+
+    privateMessages.push(privateMessage)
+    console.log(privateMessage);
+    io.to(connectedClient[to]).emit('privateMessage',privateMessage)
+    if(from !== to){
+      socket.emit('privateMessage',privateMessage)
+    }
+    
+  })
+
 
   socket.on('disconnect', () => {
     const disconnectedUserName = Object.keys(connectedClient).find(

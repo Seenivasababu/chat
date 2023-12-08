@@ -4,20 +4,29 @@ import Login from './Login';
 import { io } from 'socket.io-client';
 import Link from 'next/link';
 import { DateTime } from 'next-auth/providers/kakao';
+import PublicMessage from './PublicMessage';
+import PrivateMessage from './PrivateMessage';
 
 const socket = io('http://localhost:4000');
 
-
-type message = {
+export type message = {
   message: string;
   userName: string;
-  time : DateTime
+  time: DateTime;
+};
+export type privateMessage = {
+  data: string;
+  from: string;
+  to: string;
+  time: DateTime;
 };
 const ChatApp = () => {
   const [userName, setUserName] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [usersList, setUsersList] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [publicMessage, setPublicMessage] = useState<message[]>([]);
+  const [privateMessage, setPrivateMessage] = useState<privateMessage[]>([]);
 
   useEffect(() => {
     socket.on('usersList', (usersList) => {
@@ -29,11 +38,17 @@ const ChatApp = () => {
     socket.on('publicMessage', (message: message) => {
       setPublicMessage((prev) => [...prev, message]);
     });
+    socket.on('privateMessage', (message: privateMessage) => {
+      setPrivateMessage((prev) => [...prev, message]);
+      console.log(privateMessage);
+      
+    });
 
     return () => {
       socket.off('usersList');
       socket.off('publicMessage');
       socket.off('publicHistory');
+      socket.off('privateMessage');
     };
   }, []);
 
@@ -44,7 +59,12 @@ const ChatApp = () => {
 
   const sendMessage = () => {
     socket.emit('publicMessage', inputMessage);
-    setInputMessage("")
+    setInputMessage('');
+  };
+
+  const sendPrivateMessage = () => {
+    socket.emit('privateMessage', {to:selectedUser,message:inputMessage});
+    setInputMessage('');
   };
 
   return (
@@ -62,6 +82,7 @@ const ChatApp = () => {
                       key={user}
                       href={'/'}
                       className="p-2 hover:bg-slate-300"
+                      onClick={() => setSelectedUser(user)}
                     >
                       {user}
                     </Link>
@@ -79,33 +100,31 @@ const ChatApp = () => {
                   />
                   <button
                     className="btn btn-success mr-4"
-                    onClick={sendMessage}
+                    onClick={selectedUser ? sendPrivateMessage : sendMessage}
                   >
                     Send
                   </button>
                 </div>
 
                 <div className="bg-slate-300 ml-4 mb-2 flex-grow mr-4 overflow-auto">
-                  {publicMessage.map((message, index) => {
-                    return (
-                      <div
-                        className={`chat ${
-                          message.userName === userName
-                            ? 'chat-end'
-                            : 'chat-start'
-                        }`}
-                        key={index}
-                      >
-                        <div className="chat-header mr-2">
-                          {message.userName}
-                          <time className="text-xs opacity-50 ml-1">{message.time}</time>
-                        </div>
-                        <div className="chat-bubble">{message.message}</div>
-                      </div>
-                    );
-                  })}
+                  {selectedUser ? (
+                    <PrivateMessage
+                    privateMessage={privateMessage}
+                      userName={userName}
+                      selectedUser = {selectedUser}
+                    />
+                  ) : (
+                    <PublicMessage
+                      publicMessage={publicMessage}
+                      userName={userName}
+                    />
+                  )}
                 </div>
-                <div className="bg-slate-400 ml-4 p-2 mr-4">Public Message</div>
+                <div className="bg-slate-400 ml-4 p-2 mr-4">
+                  {selectedUser
+                    ? `Private message with ${selectedUser}`
+                    : 'Public Message'}
+                </div>
               </div>
             </div>
           </div>
