@@ -1,20 +1,19 @@
-const express = require('express');
-const cors = require('cors');
-const http = require('http');
-const socketIO = require('socket.io');
+const io = require("socket.io")(4000, {
+  cors: {
+    origin: ["http://localhost:3000"],
+  },
+});
 
-const app = express();
-const server = http.createServer(app);
-const io = socketIO(server);
 
-// Allow requests from the Next.js frontend domain
-app.use(cors({ origin: '*' }));
+const connectedClient = {}
 
 io.on('connection', (socket) => {
-  
+  socket.on('authenticate',(userName)=>{
+    if(userName){
+      connectedClient[userName] = socket.id
+    }
+    console.log(connectedClient);
+    io.emit('usersList',Object.keys(connectedClient))
+  })
 });
 
-const port = process.env.PORT || 4000;
-server.listen(port, () => {
-  console.log(`Socket server running on port ${port}`);
-});
