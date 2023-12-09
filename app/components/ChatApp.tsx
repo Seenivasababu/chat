@@ -39,9 +39,9 @@ const ChatApp = () => {
       setPublicMessage((prev) => [...prev, message]);
     });
     socket.on('privateMessage', (message: privateMessage) => {
+      console.log('Response received');
       setPrivateMessage((prev) => [...prev, message]);
       console.log(privateMessage);
-      
     });
 
     return () => {
@@ -63,7 +63,9 @@ const ChatApp = () => {
   };
 
   const sendPrivateMessage = () => {
-    socket.emit('privateMessage', {to:selectedUser,message:inputMessage});
+    console.log('Request came');
+    
+    socket.emit('privateMessage', { to: selectedUser, message: inputMessage });
     setInputMessage('');
   };
 
@@ -97,6 +99,13 @@ const ChatApp = () => {
                     className="input input-bordered mb-8 ml-4 mr-4 flex-grow"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        console.log(selectedUser);
+                        
+                        selectedUser ? sendPrivateMessage() : sendMessage();
+                      }
+                    }}
                   />
                   <button
                     className="btn btn-success mr-4"
@@ -109,9 +118,9 @@ const ChatApp = () => {
                 <div className="bg-slate-300 ml-4 mb-2 flex-grow mr-4 overflow-auto">
                   {selectedUser ? (
                     <PrivateMessage
-                    privateMessage={privateMessage}
+                      privateMessage={privateMessage}
                       userName={userName}
-                      selectedUser = {selectedUser}
+                      selectedUser={selectedUser}
                     />
                   ) : (
                     <PublicMessage

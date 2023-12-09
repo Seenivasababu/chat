@@ -42,28 +42,29 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('privateMessage',({to,message})=>{
-    const from = Object.keys(connectedClient).find(user=>connectedClient[user]===socket.id)
+  socket.on('privateMessage', ({ to, message }) => {
+    console.log("Error checking");
+    const from = Object.keys(connectedClient).find(
+      (user) => connectedClient[user] === socket.id
+    );
 
     const privateMessage = {
-      data : message,
+      data: message,
       from,
       to,
       time: new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       }),
-    }
+    };
 
-    privateMessages.push(privateMessage)
+    privateMessages.push(privateMessage);
     console.log(privateMessage);
-    io.to(connectedClient[to]).emit('privateMessage',privateMessage)
-    if(from !== to){
-      socket.emit('privateMessage',privateMessage)
+    io.to(connectedClient[to]).emit('privateMessage', privateMessage);
+    if (from !== to) {
+      socket.emit('privateMessage', privateMessage);
     }
-    
-  })
-
+  });
 
   socket.on('disconnect', () => {
     const disconnectedUserName = Object.keys(connectedClient).find(

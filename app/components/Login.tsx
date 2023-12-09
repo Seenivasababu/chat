@@ -18,6 +18,11 @@ const Login = ({ onLogin }: any) => {
             placeholder="Enter your user name"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleLogin();
+              }
+            }}
           />
           <button className="btn btn-neutral" onClick={handleLogin}>
             Log in
