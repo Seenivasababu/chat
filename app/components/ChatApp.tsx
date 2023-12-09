@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Login from './Login';
 import { io } from 'socket.io-client';
 import Link from 'next/link';
@@ -21,6 +21,7 @@ export type privateMessage = {
   time: DateTime;
 };
 const ChatApp = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [usersList, setUsersList] = useState([]);
@@ -37,11 +38,10 @@ const ChatApp = () => {
     });
     socket.on('publicMessage', (message: message) => {
       setPublicMessage((prev) => [...prev, message]);
+      scrollToBottom();
     });
     socket.on('privateMessage', (message: privateMessage) => {
-      console.log('Response received');
       setPrivateMessage((prev) => [...prev, message]);
-      console.log(privateMessage);
     });
 
     return () => {
@@ -51,6 +51,12 @@ const ChatApp = () => {
       socket.off('privateMessage');
     };
   }, []);
+
+  const scrollToBottom = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  };
 
   const handleLogin = (userName: string) => {
     setUserName(userName);
@@ -64,7 +70,7 @@ const ChatApp = () => {
 
   const sendPrivateMessage = () => {
     console.log('Request came');
-    
+
     socket.emit('privateMessage', { to: selectedUser, message: inputMessage });
     setInputMessage('');
   };
@@ -96,13 +102,12 @@ const ChatApp = () => {
               <div className="flex flex-col-reverse h-screen">
                 <div className="flex">
                   <input
+                    autoFocus
                     className="input input-bordered mb-8 ml-4 mr-4 flex-grow"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        console.log(selectedUser);
-                        
                         selectedUser ? sendPrivateMessage() : sendMessage();
                       }
                     }}
@@ -115,7 +120,14 @@ const ChatApp = () => {
                   </button>
                 </div>
 
-                <div className="bg-slate-300 ml-4 mb-2 flex-grow mr-4 overflow-auto">
+                <div
+                  className="bg-slate-300 ml-4 mb-2 flex-grow mr-4 overflow-auto"
+                  ref={containerRef}
+                  style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'transparent transparent',
+                  }}
+                >
                   {selectedUser ? (
                     <PrivateMessage
                       privateMessage={privateMessage}

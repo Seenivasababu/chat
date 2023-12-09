@@ -14,9 +14,11 @@ const Login = ({ onLogin }: any) => {
       <div className="card w-80 bg-slate-200/60">
         <div className="card-body">
           <input
+            autoFocus
             className="input input-bordered"
             placeholder="Enter your user name"
             value={username}
+          
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
